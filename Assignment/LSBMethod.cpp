@@ -5,8 +5,7 @@
 
 using namespace std;
 
-// Fungsi untuk membaca file BMP menjadi vector of bytes (char)
-// Kita menggunakan char/unsigned char karena data gambar adalah byte (0-255)
+// membaca file BMP menjadi vector of bytes (char)
 bool readBMP(const string& filename, vector<unsigned char>& header, vector<unsigned char>& data) {
     ifstream file(filename, ios::binary);
     if (!file) {
@@ -14,7 +13,7 @@ bool readBMP(const string& filename, vector<unsigned char>& header, vector<unsig
         return false;
     }
 
-    // Header BMP standar biasanya 54 byte
+    // Header BMP standar 54 byte
     header.resize(54);
     file.read(reinterpret_cast<char*>(header.data()), 54);
 
@@ -29,7 +28,7 @@ bool readBMP(const string& filename, vector<unsigned char>& header, vector<unsig
     return true;
 }
 
-// Fungsi untuk menyimpan kembali data ke file BMP baru
+// menyimpan kembali data ke file BMP baru
 void writeBMP(const string& filename, const vector<unsigned char>& header, const vector<unsigned char>& data) {
     ofstream file(filename, ios::binary);
     if (!file) {
@@ -42,9 +41,9 @@ void writeBMP(const string& filename, const vector<unsigned char>& header, const
     cout << "Gambar berhasil disimpan sebagai: " << filename << endl;
 }
 
-// Menyisipkan pesan ke dalam data piksel (LSB)
+// masukan pesan ke piksel (LSB)
 void embedMessage(vector<unsigned char>& data, const string& message) {
-    // Tambahkan karakter null ('\0') di akhir pesan sebagai penanda berhenti
+    // karakter null ('\0') di akhir untuk tanda berhenti
     string msg = message + '\0';
 
     if (data.size() < msg.length() * 8) {
@@ -55,11 +54,10 @@ void embedMessage(vector<unsigned char>& data, const string& message) {
     int pixelIndex = 0;
     for (char c : msg) {
         for (int i = 7; i >= 0; --i) {
-            // Ambil bit ke-i dari karakter
             int bitVal = (c >> i) & 1;
 
             // LSB replacement
-            data[pixelIndex] &= 254; // Set bit terakhir jadi 0 (masking 11111110)
+            data[pixelIndex] &= 254; // Set bit terakhir jadi 0
             data[pixelIndex] |= bitVal; // Isi bit terakhir dengan bit pesan
 
             pixelIndex++;
@@ -77,13 +75,12 @@ string extractMessage(const vector<unsigned char>& data) {
         // Ambil LSB dari data piksel
         int bitVal = data[i] & 1;
 
-        // Masukkan ke char c (digeser)
+        // Masukkan ke char c
         c = (c << 1) | bitVal;
         bitCount++;
 
-        // Jika sudah terkumpul 8 bit (1 byte/karakter)
         if (bitCount == 8) {
-            if (c == '\0') break; // Berhenti jika ketemu penanda akhir null
+            if (c == '\0') break; // Berhenti jika ketemu penanda akhir
             message += c;
             c = 0;
             bitCount = 0;
@@ -105,14 +102,12 @@ int main() {
     cin >> choice;
 
     cout << "Masukkan nama file gambar (.bmp): ";
-    cin >> filename; // CONTOH: gambar.bmp
+    cin >> filename;
 
     if (readBMP(filename, header, pixelData)) {
         if (choice == 1) {
             cout << "Masukkan pesan rahasia (tanpa spasi atau gunakan _): ";
             cin >> message;
-            // Catatan: cin biasa akan berhenti di spasi. Gunakan getline(cin, message) jika ingin spasi,
-            // tapi perlu handling buffer cin.ignore().
 
             embedMessage(pixelData, message);
             writeBMP("stego_output.bmp", header, pixelData);
